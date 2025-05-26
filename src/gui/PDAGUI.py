@@ -41,7 +41,14 @@ class PDAGUI:
 		tk.Label(config_frame, text="Transitions (one per line):").grid(row=len(labels), column=0, sticky='w', pady=2)
 		self.transitions_text = tk.Text(config_frame, width=40, height=8)
 		self.transitions_text.grid(row=len(labels), column=1, pady=2)
-		self.transitions_text.insert(tk.END, "(q0, a, $) -> (q0, A$)\n(q0, a, A) -> (q0, AA)\n(q0, b, A) -> (q1, ε)\n(q1, b, A) -> (q1, ε)\n(q1, ε, $) -> (q2, $)")
+		self.transitions_text.insert(
+			tk.END,
+			"(q0, a, $) -> (q0, A$)\n"
+			"(q0, a, A) -> (q0, AA)\n"
+			"(q0, b, A) -> (q1, ε)\n"
+			"(q1, b, A) -> (q1, ε)\n"
+			"(q1, ε, $) -> (q2, ε)"
+		)
 
 		# Simulation controls
 		sim_frame = tk.LabelFrame(control_frame, text="Simulation", padx=5, pady=5)
@@ -66,15 +73,15 @@ class PDAGUI:
 		self.current_input_pos = 0
 
 		# PDA diagram canvas
-		self.fig, self.ax = plt.subplots(figsize=(5,5))
+		self.fig, self.ax = plt.subplots(figsize=(4,4))
 		self.canvas = FigureCanvasTkAgg(self.fig, master=diagram_frame)
 		self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
 		# Stack canvas for vertical stack visualization
 		stack_frame = tk.LabelFrame(diagram_frame, text="Stack Visualization", padx=5, pady=5)
-		stack_frame.pack(fill=tk.BOTH, expand=False)
-		self.stack_canvas = tk.Canvas(stack_frame, width=150, height=350, bg='white')
-		self.stack_canvas.pack()
+		stack_frame.pack(fill=tk.BOTH, expand=True)  # Changed to expand and fill
+		self.stack_canvas = tk.Canvas(stack_frame, width=500, height=500, bg='white')
+		self.stack_canvas.pack(fill=tk.BOTH, expand=True)  # Make it fill the frame
 
 		self.pda = None
 		self.transitions = {}
@@ -137,25 +144,84 @@ class PDAGUI:
 		self.canvas.draw()
 
 	def update_stack_visual(self):
-		self.stack_canvas.delete("all")
+		self.stack_canvas.delete("all")  # Clear previous drawing
+		
 		if not self.pda:
 			return
+			
 		stack = self.pda.stack.stack
-
-		box_width = 100
-		box_height = 30
-		x = 25
-		y_start = 320  # bottom margin
-
-		# Draw stack boxes from bottom (stack[0]) to top (stack[-1])
-		for i, symbol in enumerate(stack):
-			y = y_start - (len(stack) - 1 - i) * box_height
-			self.stack_canvas.create_rectangle(x, y - box_height, x + box_width, y, fill='lightyellow', outline='black')
-			self.stack_canvas.create_text(x + box_width/2, y - box_height/2, text=symbol, font=('Arial', 16))
-
-		# Label top of stack
-		self.stack_canvas.create_text(x + box_width + 20, y_start - (len(stack) - 1) * box_height + 15,
-									 text="Top", fill="red", font=('Arial', 12, 'bold'))
+		
+		# Get actual canvas dimensions
+		canvas_width = self.stack_canvas.winfo_width()
+		canvas_height = self.stack_canvas.winfo_height()
+		
+		# If canvas isn't visible yet, use default dimensions
+		if canvas_width < 10 or canvas_height < 10:
+			canvas_width = 500
+			canvas_height = 700
+		
+		# Calculate cell dimensions based on canvas size
+		max_cells = 15  # Maximum number of stack elements to show
+		cell_height = min(60, canvas_height // max_cells)
+		cell_width = min(200, canvas_width - 100)
+		x_center = canvas_width // 2
+		
+		# Draw stack from bottom to top
+		y_position = canvas_height - 50  # Start near bottom
+		
+		# Draw stack base
+		self.stack_canvas.create_rectangle(
+			x_center - cell_width - 20, y_position + cell_height,
+			x_center + cell_width + 20, y_position + cell_height + 15,
+			fill="black"
+		)
+		
+		# Draw each stack element
+		for i, symbol in enumerate(reversed(stack)):
+			# Stop if we've reached maximum visible cells
+			if i >= max_cells:
+				self.stack_canvas.create_text(
+					x_center, y_position - 30,
+					text=f"... {len(stack)-max_cells} more items ...",
+					font=("Arial", 10), fill="gray"
+				)
+				break
+				
+			# Highlight top of stack
+			fill_color = "lightgreen" if i == 0 else "lightblue"
+			outline_color = "darkgreen" if i == 0 else "darkblue"
+			
+			# Draw cell
+			self.stack_canvas.create_rectangle(
+				x_center - cell_width, y_position,
+				x_center + cell_width, y_position + cell_height,
+				fill=fill_color, outline=outline_color, width=3
+			)
+			
+			# Draw symbol
+			self.stack_canvas.create_text(
+				x_center, y_position + cell_height // 2,
+				text=symbol, font=("Arial", 18, "bold")
+			)
+			
+			# Draw pointer for top of stack
+			if i == 0:
+				self.stack_canvas.create_text(
+					x_center + cell_width + 30, y_position + cell_height // 2,
+					text="TOP", font=("Arial", 12, "bold"), fill="red"
+				)
+			
+			y_position -= cell_height + 8
+		
+		# Current state information
+		self.stack_canvas.create_text(
+			x_center, 60,
+			text=f"Current State: {self.pda.current_state}",
+			font=("Arial", 12), fill="black"
+		)
+		
+		# Force canvas update
+		self.stack_canvas.update_idletasks()
 
 	def step(self):
 		if not self.pda:
