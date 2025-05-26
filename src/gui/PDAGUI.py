@@ -162,8 +162,8 @@ class PDAGUI:
 		
 		# Calculate cell dimensions based on canvas size
 		max_cells = 15  # Maximum number of stack elements to show
-		cell_height = min(60, canvas_height // max_cells)
-		cell_width = min(200, canvas_width - 100)
+		cell_height = min(80, canvas_height // max_cells)
+		cell_width = min(100, canvas_width - 100)
 		x_center = canvas_width // 2
 		
 		# Draw stack from bottom to top
@@ -177,7 +177,7 @@ class PDAGUI:
 		)
 		
 		# Draw each stack element
-		for i, symbol in enumerate(reversed(stack)):
+		for i, symbol in enumerate(stack):
 			# Stop if we've reached maximum visible cells
 			if i >= max_cells:
 				self.stack_canvas.create_text(
@@ -187,9 +187,9 @@ class PDAGUI:
 				)
 				break
 				
-			# Highlight top of stack
-			fill_color = "lightgreen" if i == 0 else "lightblue"
-			outline_color = "darkgreen" if i == 0 else "darkblue"
+			# Highlight bottom of stack
+			fill_color = "salmon" if i == 0 else "lightblue"
+			outline_color = "darkred" if i == 0 else "darkblue"
 			
 			# Draw cell
 			self.stack_canvas.create_rectangle(
@@ -204,11 +204,11 @@ class PDAGUI:
 				text=symbol, font=("Arial", 18, "bold")
 			)
 			
-			# Draw pointer for top of stack
+			# Draw pointer for bottom of stack
 			if i == 0:
 				self.stack_canvas.create_text(
 					x_center + cell_width + 30, y_position + cell_height // 2,
-					text="TOP", font=("Arial", 12, "bold"), fill="red"
+					text="BOTTOM", font=("Arial", 12, "bold"), fill="red"
 				)
 			
 			y_position -= cell_height + 8
