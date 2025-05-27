@@ -187,9 +187,9 @@ class PDAGUI:
 				)
 				break
 				
-			# Highlight bottom of stack
-			fill_color = "salmon" if i == 0 else "lightblue"
-			outline_color = "darkred" if i == 0 else "darkblue"
+			# Highlight bottom and top of stack
+			fill_color = "salmon" if i == 0 else "lightgreen" if i == len(stack) - 1 else "lightblue"
+			outline_color = "darkred" if i == 0 else "darkgreen" if i == len(stack) - 1 else "darkblue"
 			
 			# Draw cell
 			self.stack_canvas.create_rectangle(
@@ -203,13 +203,6 @@ class PDAGUI:
 				x_center, y_position + cell_height // 2,
 				text=symbol, font=("Arial", 18, "bold")
 			)
-			
-			# Draw pointer for bottom of stack
-			if i == 0:
-				self.stack_canvas.create_text(
-					x_center + cell_width + 30, y_position + cell_height // 2,
-					text="BOTTOM", font=("Arial", 12, "bold"), fill="red"
-				)
 			
 			y_position -= cell_height + 8
 		
