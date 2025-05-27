@@ -131,16 +131,48 @@ class PDAGUI:
 	def draw_pda_graph(self):
 		self.ax.clear()
 		G = nx.DiGraph()
+		
 		for s in self.pda.states:
 			G.add_node(s)
 		for (state, inp, stack_top), dests in self.transitions.items():
 			for (new_state, stack_push) in dests:
 				label = f"{inp}, {stack_top} -> {stack_push}"
 				G.add_edge(state, new_state, label=label)
-		pos = nx.spring_layout(G)
-		nx.draw(G, pos, ax=self.ax, with_labels=True, node_size=1500, node_color='lightblue')
-		edge_labels = nx.get_edge_attributes(G, 'label')
+		
+		pos = nx.spring_layout(G, k=0.3)  # Increase k for more spacing
+
+		# Remove axis frame completely
+		self.ax.set_axis_off()
+		
+		# Draw nodes
+		nx.draw_networkx_nodes(G, pos, ax=self.ax, node_size=2000, 
+							node_color='lightblue')
+		nx.draw_networkx_labels(G, pos, ax=self.ax)
+		
+		# Draw edges with special handling for self-loops
+		for edge in G.edges():
+			if edge[0] == edge[1]:  # Self-loop
+				# Create a fancy arrow for the self-loop
+				node_pos = pos[edge[0]]
+				circle = plt.Circle((node_pos[0], node_pos[1]+0.15), 
+								0.15, color='black', fill=False)
+				self.ax.add_patch(circle)
+				
+				# Add label
+				label = G.edges[edge]['label']
+				self.ax.text(node_pos[0], node_pos[1]+0.4, label, 
+						ha='center', va='center')
+			else:
+				# Regular edge
+				nx.draw_networkx_edges(G, pos, edgelist=[edge], ax=self.ax,
+									arrows=True, arrowstyle='-|>',
+									arrowsize=20, width=2)
+		
+		# Draw edge labels for non-self-loop edges
+		edge_labels = {(u, v): d['label'] 
+					for u, v, d in G.edges(data=True) if u != v}
 		nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, ax=self.ax)
+		
 		self.canvas.draw()
 
 	def update_stack_visual(self):
