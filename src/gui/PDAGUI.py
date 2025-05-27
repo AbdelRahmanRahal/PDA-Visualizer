@@ -139,7 +139,7 @@ class PDAGUI:
 				label = f"{inp}, {stack_top} -> {stack_push}"
 				G.add_edge(state, new_state, label=label)
 		
-		pos = nx.spring_layout(G, k=0.3)  # Increase k for more spacing
+		pos = nx.spring_layout(G, k=0.5)
 
 		# Remove axis frame completely
 		self.ax.set_axis_off()
@@ -152,7 +152,6 @@ class PDAGUI:
 		# Draw edges with special handling for self-loops
 		for edge in G.edges():
 			if edge[0] == edge[1]:  # Self-loop
-				# Create a fancy arrow for the self-loop
 				node_pos = pos[edge[0]]
 				circle = plt.Circle((node_pos[0], node_pos[1]+0.15), 
 								0.15, color='black', fill=False)
@@ -193,8 +192,8 @@ class PDAGUI:
 			canvas_height = 700
 		
 		# Calculate cell dimensions based on canvas size
-		max_cells = 15  # Maximum number of stack elements to show
-		cell_height = min(80, canvas_height // max_cells)
+		max_cells = 7
+		cell_height = min(70, canvas_height // max_cells)
 		cell_width = min(100, canvas_width - 100)
 		x_center = canvas_width // 2
 		
